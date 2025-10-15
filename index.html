@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELVES - 业余无线电通联日志</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4A6FA5;
+            --secondary-color: #6B8CBC;
+            --background-color: #F5F7FA;
+            --card-color: #FFFFFF;
+            --text-color: #2D3748;
+            --text-light: #718096;
+            --border-color: #E2E8F0;
+            --accent-color: #4299E1;
+            --success-color: #48BB78;
+            --warning-color: #ED8936;
+            --danger-color: #F56565;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #5A7BB5;
+            --secondary-color: #7B9CCC;
+            --background-color: #1a202c;
+            --card-color: #2D3748;
+            --text-color: #E2E8F0;
+            --text-light: #A0AEC0;
+            --border-color: #4A5568;
+            --accent-color: #63B3ED;
+            --success-color: #68D391;
+            --warning-color: #F6AD55;
+            --danger-color: #FC8181;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 80px;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* 顶部栏样式 */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-callsign {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+
+        .header-time {
+            font-size: 1rem;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            text-align: right;
+        }
+
+        /* 内容区域样式 */
+        .content {
+            padding: 20px 0;
+            min-height: calc(100vh - 140px);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 记录卡片样式 */
+        .records-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 0 8px; /* 添加左右内边距 */
+        }
+
+        .record-card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+
+        .record-card.collapsed {
+            max-height: 120px;
+        }
+
+        .record-card.expanded {
+            max-height: 1000px;
+        }
+
+        .record-summary {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .record-callsign {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .record-datetime {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .record-frequency {
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .contest-badge {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .record-details {
+            padding: 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 12px;
+            padding-top: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .record-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 表单样式 */
+        .form-container {
+            background-color: var(--card-color);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* 设置页面样式 */
+        .settings-container {
+            background-color: var(--card-color);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-title {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-option {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            text-align: center;
+            flex: 1;
+        }
+
+        .theme-option.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 底部导航样式 */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-color);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            padding: 8px 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 25%;
+        }
+
+        .nav-tab.active {
+            background-color: rgba(74, 111, 165, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* 筛选区域 */
+        .filter-container {
+            background-color: var(--card-color);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .filter-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .filter-content {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .filter-content.expanded {
+            display: block;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        /* 导入导出区域 */
+        .import-export-section {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* 关于信息 */
+        .about-info {
+            text-align: center;
+            padding: 24px;
+            background-color: var(--card-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .about-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary-color);
+        }
+
+        .about-text {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        /* 空状态提示 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 0.9rem;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* 语言选择器 */
+        .language-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .language-option {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .language-option.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 竞赛选择器 */
+        .contest-selector {
+            margin-bottom: 20px;
+        }
+
+        /* 自定义下拉选择样式 */
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-header {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .custom-select-options.active {
+            display: block;
+        }
+
+        .custom-select-option {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .custom-select-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-select-option:hover {
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+
+        /* 自定义日期时间选择器 */
+        .datetime-picker {
+            display: flex;
+            gap: 12px;
+        }
+
+        .datetime-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .import-export-section {
+                flex-direction: column;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .header-title, .header-callsign, .header-time {
+                font-size: 0.9rem;
+            }
+            
+            .nav-label {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .form-container, .settings-container {
+                padding: 16px;
+            }
+            
+            .record-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部栏 -->
+    <div class="header">
+        <div class="container header-content">
+            <div class="header-title">ELVES</div>
+            <div class="header-callsign" id="userCallsign">未设置呼号</div>
+            <div class="header-time" id="currentTime">--:--:--</div>
+        </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="container content">
+        <!-- 记录页面 -->
+        <div class="page active" id="recordsPage">
+            <h2 style="text-align: center; margin-bottom: 20px;" data-translate="records">通联记录</h2>
+            
+            <!-- 筛选区域 -->
+            <div class="filter-container">
+                <div class="filter-header" id="filterToggle">
+                    <div class="filter-title" data-translate="filterConditions">筛选条件</div>
+                    <div>▼</div>
+                </div>
+                <div class="filter-content" id="filterContent">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="form-label" for="filterDateFrom" data-translate="startDate">开始日期</label>
+                            <input type="date" id="filterDateFrom" class="form-control">
+                        </div>
+                        <div class="filter-group">
+                            <label class="form-label" for="filterDateTo" data-translate="endDate">结束日期</label>
+                            <input type="date" id="filterDateTo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="form-label" for="filterCallsign" data-translate="callsign">呼号</label>
+                            <input type="text" id="filterCallsign" class="form-control" placeholder="输入呼号">
+                        </div>
+                        <div class="filter-group">
+                            <label class="form-label" for="filterGrid" data-translate="grid">网格坐标</label>
+                            <input type="text" id="filterGrid" class="form-control" placeholder="输入网格坐标">
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="form-label" for="filterContest" data-translate="contest">比赛</label>
+                            <div class="custom-select" id="filterContestSelect">
+                                <div class="custom-select-header">
+                                    <span id="filterContestValue" data-translate="all">全部</span>
+                                    <span>▼</span>
+                                </div>
+                                <div class="custom-select-options" id="filterContestOptions">
+                                    <div class="custom-select-option" data-value="">全部</div>
+                                    <div class="custom-select-option" data-value="CQWPX">CQ WPX</div>
+                                    <div class="custom-select-option" data-value="CQWW">CQWW</div>
+                                    <div class="custom-select-option" data-value="WAPC">WAPC</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <button class="btn btn-primary" id="applyFilterBtn" data-translate="applyFilter">应用筛选</button>
+                        <button class="btn btn-outline" id="clearFilterBtn" data-translate="clearFilter">清除筛选</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="records-container" id="recordsContainer">
+                <!-- 记录卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <!-- 新增页面 -->
+        <div class="page" id="addPage">
+            <h2 style="text-align: center; margin-bottom: 20px;" data-translate="addRecord">新增通联记录</h2>
+            <div class="form-container">
+                <div class="contest-selector">
+                    <label class="form-label" data-translate="contestSelection">比赛选择</label>
+                    <div class="custom-select" id="contestSelect">
+                        <div class="custom-select-header">
+                            <span id="contestValue" data-translate="noContest">无比赛</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="custom-select-options" id="contestOptions">
+                            <div class="custom-select-option" data-value="">无比赛</div>
+                            <div class="custom-select-option" data-value="CQWPX">CQ WPX</div>
+                            <div class="custom-select-option" data-value="CQWW">CQWW</div>
+                            <div class="custom-select-option" data-value="WAPC">WAPC</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="callsign" data-translate="theirCallsign">对方呼号</label>
+                    <input type="text" id="callsign" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="frequency" data-translate="frequency">频率 (MHz)</label>
+                        <input type="text" id="frequency" class="form-control" placeholder="14.195">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-translate="mode">模式</label>
+                        <div class="custom-select" id="modeSelect">
+                            <div class="custom-select-header">
+                                <span id="modeValue">SSB</span>
+                                <span>▼</span>
+                            </div>
+                            <div class="custom-select-options" id="modeOptions">
+                                <div class="custom-select-option" data-value="SSB">SSB</div>
+                                <div class="custom-select-option" data-value="CW">CW</div>
+                                <div class="custom-select-option" data-value="FT8">FT8</div>
+                                <div class="custom-select-option" data-value="FM">FM</div>
+                                <div class="custom-select-option" data-value="AM">AM</div>
+                                <div class="custom-select-option" data-value="其他">其他</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" data-translate="date">日期</label>
+                        <input type="date" id="date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-translate="time">时间</label>
+                        <input type="time" id="time" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="rstSent" data-translate="sentReport">发送信号报告</label>
+                        <input type="text" id="rstSent" class="form-control" placeholder="59">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rstRcvd" data-translate="receivedReport">接收信号报告</label>
+                        <input type="text" id="rstRcvd" class="form-control" placeholder="59">
+                    </div>
+                </div>
+                
+                <!-- 比赛特定字段 -->
+                <div id="contestFields" style="display: none;">
+                    <div class="form-group" id="serialField" style="display: none;">
+                        <label class="form-label" for="serial" data-translate="serialNumber">序列号</label>
+                        <input type="text" id="serial" class="form-control" placeholder="001">
+                    </div>
+                    <div class="form-group" id="cqzoneField" style="display: none;">
+                        <label class="form-label" for="cqzone" data-translate="cqZone">CQ分区</label>
+                        <input type="text" id="cqzone" class="form-control" placeholder="24">
+                    </div>
+                    <div class="form-group" id="qsosNumberField" style="display: none;">
+                        <label class="form-label" for="qsosNumber" data-translate="qsoNumber">QSO序号</label>
+                        <input type="text" id="qsosNumber" class="form-control" placeholder="001">
+                    </div>
+                    <div class="form-group" id="provinceField" style="display: none;">
+                        <label class="form-label" for="province" data-translate="provinceAbbr">省市区缩写</label>
+                        <input type="text" id="province" class="form-control" placeholder="ZJ">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="name" data-translate="theirName">对方姓名</label>
+                    <input type="text" id="name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="qth" data-translate="theirLocation">对方位置</label>
+                    <input type="text" id="qth" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="gridsquare" data-translate="theirGrid">对方网格坐标</label>
+                    <input type="text" id="gridsquare" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="comment" data-translate="remarks">备注</label>
+                    <textarea id="comment" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="import-export-section">
+                    <input type="file" id="importFile" class="file-input" accept=".adi,.log,.txt">
+                    <label for="importFile" class="file-label">📁 <span data-translate="importLog">导入日志</span></label>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <button class="btn btn-primary" id="saveRecordBtn" style="width: 100%;" data-translate="saveRecord">保存记录</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置页面 -->
+        <div class="page" id="settingsPage">
+            <h2 style="text-align: center; margin-bottom: 20px;" data-translate="settings">设置</h2>
+            <div class="settings-container">
+                <div class="language-selector">
+                    <div class="language-option active" data-lang="zh-CN">简体中文</div>
+                    <div class="language-option" data-lang="zh-TW">繁體中文</div>
+                    <div class="language-option" data-lang="en">English</div>
+                    <div class="language-option" data-lang="ja">日本語</div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title" data-translate="personalInfo">个人信息</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="myCallsign" data-translate="myCallsign">我的呼号</label>
+                        <input type="text" id="myCallsign" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="myGrid" data-translate="myGrid">我的GRID网格</label>
+                        <input type="text" id="myGrid" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="myCQZone" data-translate="myCQZone">我的CQ分区</label>
+                        <input type="text" id="myCQZone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="myITUZone" data-translate="myITUZone">我的ITU分区</label>
+                        <input type="text" id="myITUZone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="myEquipment" data-translate="myEquipment">使用设备</label>
+                        <input type="text" id="myEquipment" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="myAntenna" data-translate="myAntenna">使用天线</label>
+                        <input type="text" id="myAntenna" class="form-control">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="settings-title" data-translate="displaySettings">显示设置</h3>
+                    <div class="form-group">
+                        <label class="form-label" data-translate="themeMode">主题模式</label>
+                        <div class="theme-toggle">
+                            <div class="theme-option active" data-theme="light" data-translate="light">浅色</div>
+                            <div class="theme-option" data-theme="dark" data-translate="dark">深色</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-translate="timeDisplay">时间显示</label>
+                        <div class="theme-toggle">
+                            <div class="theme-option active" data-timezone="BJT">BJT</div>
+                            <div class="theme-option" data-timezone="UTC">UTC</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="settings-title" data-translate="about">关于</h3>
+                    <div class="about-info">
+                        <div class="about-title">ELVES</div>
+                        <div class="about-text">
+                            <span data-translate="developedBy">由BG5DHV开发</span><br>
+                            v1.10.20251013
+                            <br>
+                            <a href="https://github.com/pyseafish/ELVES" style="color: var(--text-color); text-decoration: none; font-size: 0.95rem;">Open source under MIT license</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导出页面 -->
+        <div class="page" id="exportPage">
+            <h2 style="text-align: center; margin-bottom: 20px;" data-translate="exportRecords">导出记录</h2>
+            <div class="form-container">
+                <div class="form-group">
+                    <label class="form-label" for="exportDateFrom" data-translate="startDate">开始日期</label>
+                    <input type="date" id="exportDateFrom" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="exportDateTo" data-translate="endDate">结束日期</label>
+                    <input type="date" id="exportDateTo" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-translate="contestFilter">比赛筛选</label>
+                    <div class="custom-select" id="exportContestSelect">
+                        <div class="custom-select-header">
+                            <span id="exportContestValue" data-translate="allRecords">全部记录</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="custom-select-options" id="exportContestOptions">
+                            <div class="custom-select-option" data-value="">全部记录</div>
+                            <div class="custom-select-option" data-value="CQWPX">CQ WPX</div>
+                            <div class="custom-select-option" data-value="CQWW">CQWW</div>
+                            <div class="custom-select-option" data-value="WAPC">WAPC</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="exportFilename" data-translate="exportFilename">导出文件名</label>
+                    <input type="text" id="exportFilename" class="form-control" placeholder="my_ham_log">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-translate="exportFormat">导出格式</label>
+                    <div class="theme-toggle">
+                        <div class="theme-option active" data-format="adi">ADI</div>
+                        <div class="theme-option" data-format="cabrillo">Cabrillo</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="generateExportBtn" style="width: 100%;" data-translate="generateExport">生成导出文件</button>
+                </div>
+                <div class="form-group" id="exportResult" style="display: none;">
+                    <label class="form-label" data-translate="exportContent">导出内容</label>
+                    <textarea id="exportContent" class="form-control" rows="10" readonly></textarea>
+                    <button class="btn btn-primary" id="downloadBtn" style="margin-top: 10px; width: 100%;" data-translate="downloadFile">下载文件</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="footer">
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-page="recordsPage">
+                <div class="nav-icon">📝</div>
+                <div class="nav-label" data-translate="records">记录</div>
+            </div>
+            <div class="nav-tab" data-page="addPage">
+                <div class="nav-icon">➕</div>
+                <div class="nav-label" data-translate="add">新增</div>
+            </div>
+            <div class="nav-tab" data-page="settingsPage">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label" data-translate="settings">设置</div>
+            </div>
+            <div class="nav-tab" data-page="exportPage">
+                <div class="nav-icon">📤</div>
+                <div class="nav-label" data-translate="export">导出</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" data-translate="confirmAction">确认操作</div>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalMessage">
+                <!-- 消息内容将通过JavaScript动态生成 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="modalCancel" data-translate="cancel">取消</button>
+                <button class="btn btn-primary" id="modalConfirm" data-translate="confirm">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态管理
+        const AppState = {
+            records: [],
+            settings: {
+                myCallsign: '',
+                myGrid: '',
+                myCQZone: '',
+                myITUZone: '',
+                myEquipment: '',
+                myAntenna: '',
+                theme: 'light',
+                timezone: 'BJT',
+                language: 'zh-CN'
+            },
+            currentEditingRecord: null,
+            filters: {
+                dateFrom: null,
+                dateTo: null,
+                callsign: '',
+                grid: '',
+                contest: ''
+            },
+            modalCallback: null
+        };
+
+        // 多语言支持
+        const Translations = {
+            'zh-CN': {
+                'noCallsign': '未设置呼号',
+                'noRecords': '暂无通联记录',
+                'addRecordHint': '点击底部"新增"开始记录',
+                'deleteConfirm': '确定要删除这条通联记录吗？',
+                'updateConfirm': '确定要更新这条通联记录吗？',
+                'importSuccess': '成功导入 {count} 条记录',
+                'importPartial': '成功导入 {count} 条记录，跳过 {skipped} 条重复记录',
+                'importFailed': '无法解析文件内容，请检查文件格式',
+                'duplicateFound': '发现重复记录，是否确认添加？',
+                'records': '记录',
+                'add': '新增',
+                'settings': '设置',
+                'export': '导出',
+                'filterConditions': '筛选条件',
+                'startDate': '开始日期',
+                'endDate': '结束日期',
+                'callsign': '呼号',
+                'grid': '网格坐标',
+                'contest': '比赛',
+                'all': '全部',
+                'applyFilter': '应用筛选',
+                'clearFilter': '清除筛选',
+                'addRecord': '新增通联记录',
+                'contestSelection': '比赛选择',
+                'noContest': '无比赛',
+                'theirCallsign': '对方呼号',
+                'frequency': '频率 (MHz)',
+                'mode': '模式',
+                'date': '日期',
+                'time': '时间',
+                'sentReport': '发送信号报告',
+                'receivedReport': '接收信号报告',
+                'serialNumber': '序列号',
+                'cqZone': 'CQ分区',
+                'qsoNumber': 'QSO序号',
+                'provinceAbbr': '省市区缩写',
+                'theirName': '对方姓名',
+                'theirLocation': '对方位置',
+                'theirGrid': '对方网格坐标',
+                'remarks': '备注',
+                'importLog': '导入日志',
+                'saveRecord': '保存记录',
+                'personalInfo': '个人信息',
+                'myCallsign': '我的呼号',
+                'myGrid': '我的GRID网格',
+                'myCQZone': '我的CQ分区',
+                'myITUZone': '我的ITU分区',
+                'myEquipment': '使用设备',
+                'myAntenna': '使用天线',
+                'displaySettings': '显示设置',
+                'themeMode': '主题模式',
+                'light': '浅色',
+                'dark': '深色',
+                'timeDisplay': '时间显示',
+                'about': '关于',
+                'developedBy': '由BG5DHV开发',
+                'exportRecords': '导出记录',
+                'contestFilter': '比赛筛选',
+                'allRecords': '全部记录',
+                'exportFilename': '导出文件名',
+                'exportFormat': '导出格式',
+                'generateExport': '生成导出文件',
+                'exportContent': '导出内容',
+                'downloadFile': '下载文件',
+                'confirmAction': '确认操作',
+                'cancel': '取消',
+                'confirm': '确认'
+            },
+            'zh-TW': {
+                'noCallsign': '未設置呼號',
+                'noRecords': '暫無通聯記錄',
+                'addRecordHint': '點擊底部"新增"開始記錄',
+                'deleteConfirm': '確定要刪除這條通聯記錄嗎？',
+                'updateConfirm': '確定要更新這條通聯記錄嗎？',
+                'importSuccess': '成功導入 {count} 條記錄',
+                'importPartial': '成功導入 {count} 條記錄，跳過 {skipped} 條重複記錄',
+                'importFailed': '無法解析文件內容，請檢查文件格式',
+                'duplicateFound': '發現重複記錄，是否確認添加？',
+                'records': '記錄',
+                'add': '新增',
+                'settings': '設置',
+                'export': '導出',
+                'filterConditions': '篩選條件',
+                'startDate': '開始日期',
+                'endDate': '結束日期',
+                'callsign': '呼號',
+                'grid': '網格坐標',
+                'contest': '比賽',
+                'all': '全部',
+                'applyFilter': '應用篩選',
+                'clearFilter': '清除篩選',
+                'addRecord': '新增通聯記錄',
+                'contestSelection': '比賽選擇',
+                'noContest': '無比賽',
+                'theirCallsign': '對方呼號',
+                'frequency': '頻率 (MHz)',
+                'mode': '模式',
+                'date': '日期',
+                'time': '時間',
+                'sentReport': '發送信號報告',
+                'receivedReport': '接收信號報告',
+                'serialNumber': '序列號',
+                'cqZone': 'CQ分區',
+                'qsoNumber': 'QSO序號',
+                'provinceAbbr': '省市區縮寫',
+                'theirName': '對方姓名',
+                'theirLocation': '對方位置',
+                'theirGrid': '對方網格坐標',
+                'remarks': '備註',
+                'importLog': '導入日誌',
+                'saveRecord': '保存記錄',
+                'personalInfo': '個人信息',
+                'myCallsign': '我的呼號',
+                'myGrid': '我的GRID網格',
+                'myCQZone': '我的CQ分區',
+                'myITUZone': '我的ITU分區',
+                'myEquipment': '使用設備',
+                'myAntenna': '使用天線',
+                'displaySettings': '顯示設置',
+                'themeMode': '主題模式',
+                'light': '淺色',
+                'dark': '深色',
+                'timeDisplay': '時間顯示',
+                'about': '關於',
+                'developedBy': '由BG5DHV開發',
+                'exportRecords': '導出記錄',
+                'contestFilter': '比賽篩選',
+                'allRecords': '全部記錄',
+                'exportFilename': '導出文件名',
+                'exportFormat': '導出格式',
+                'generateExport': '生成導出文件',
+                'exportContent': '導出內容',
+                'downloadFile': '下載文件',
+                'confirmAction': '確認操作',
+                'cancel': '取消',
+                'confirm': '確認'
+            },
+            'en': {
+                'noCallsign': 'No Callsign Set',
+                'noRecords': 'No QSO Records',
+                'addRecordHint': 'Tap "Add" below to start logging',
+                'deleteConfirm': 'Are you sure you want to delete this QSO?',
+                'updateConfirm': 'Are you sure you want to update this QSO?',
+                'importSuccess': 'Successfully imported {count} records',
+                'importPartial': 'Successfully imported {count} records, skipped {skipped} duplicates',
+                'importFailed': 'Unable to parse file content, please check file format',
+                'duplicateFound': 'Duplicate record found, confirm to add?',
+                'records': 'Records',
+                'add': 'Add',
+                'settings': 'Settings',
+                'export': 'Export',
+                'filterConditions': 'Filter Conditions',
+                'startDate': 'Start Date',
+                'endDate': 'End Date',
+                'callsign': 'Callsign',
+                'grid': 'Grid Square',
+                'contest': 'Contest',
+                'all': 'All',
+                'applyFilter': 'Apply Filter',
+                'clearFilter': 'Clear Filter',
+                'addRecord': 'Add QSO Record',
+                'contestSelection': 'Contest Selection',
+                'noContest': 'No Contest',
+                'theirCallsign': 'Their Callsign',
+                'frequency': 'Frequency (MHz)',
+                'mode': 'Mode',
+                'date': 'Date',
+                'time': 'Time',
+                'sentReport': 'Sent Report',
+                'receivedReport': 'Received Report',
+                'serialNumber': 'Serial Number',
+                'cqZone': 'CQ Zone',
+                'qsoNumber': 'QSO Number',
+                'provinceAbbr': 'Province Abbreviation',
+                'theirName': 'Their Name',
+                'theirLocation': 'Their Location',
+                'theirGrid': 'Their Grid Square',
+                'remarks': 'Remarks',
+                'importLog': 'Import Log',
+                'saveRecord': 'Save Record',
+                'personalInfo': 'Personal Info',
+                'myCallsign': 'My Callsign',
+                'myGrid': 'My GRID Square',
+                'myCQZone': 'My CQ Zone',
+                'myITUZone': 'My ITU Zone',
+                'myEquipment': 'My Equipment',
+                'myAntenna': 'My Antenna',
+                'displaySettings': 'Display Settings',
+                'themeMode': 'Theme Mode',
+                'light': 'Light',
+                'dark': 'Dark',
+                'timeDisplay': 'Time Display',
+                'about': 'About',
+                'developedBy': 'Developed by BG5DHV',
+                'exportRecords': 'Export Records',
+                'contestFilter': 'Contest Filter',
+                'allRecords': 'All Records',
+                'exportFilename': 'Export Filename',
+                'exportFormat': 'Export Format',
+                'generateExport': 'Generate Export',
+                'exportContent': 'Export Content',
+                'downloadFile': 'Download File',
+                'confirmAction': 'Confirm Action',
+                'cancel': 'Cancel',
+                'confirm': 'Confirm'
+            },
+            'ja': {
+                'noCallsign': 'コールサイン未設定',
+                'noRecords': 'QSO記録がありません',
+                'addRecordHint': '下部の「追加」をタップして記録を開始',
+                'deleteConfirm': 'このQSOを削除してもよろしいですか？',
+                'updateConfirm': 'このQSOを更新してもよろしいですか？',
+                'importSuccess': '{count}件の記録を正常にインポートしました',
+                'importPartial': '{count}件の記録を正常にインポートしました、{skipped}件の重複をスキップしました',
+                'importFailed': 'ファイルの内容を解析できません。ファイル形式を確認してください',
+                'duplicateFound': '重複する記録が見つかりました。追加しますか？',
+                'records': '記録',
+                'add': '追加',
+                'settings': '設定',
+                'export': 'エクスポート',
+                'filterConditions': 'フィルター条件',
+                'startDate': '開始日',
+                'endDate': '終了日',
+                'callsign': 'コールサイン',
+                'grid': 'グリッドスクエア',
+                'contest': 'コンテスト',
+                'all': 'すべて',
+                'applyFilter': 'フィルターを適用',
+                'clearFilter': 'フィルターをクリア',
+                'addRecord': 'QSO記録を追加',
+                'contestSelection': 'コンテスト選択',
+                'noContest': 'コンテストなし',
+                'theirCallsign': '相手のコールサイン',
+                'frequency': '周波数 (MHz)',
+                'mode': 'モード',
+                'date': '日付',
+                'time': '時間',
+                'sentReport': '送信レポート',
+                'receivedReport': '受信レポート',
+                'serialNumber': 'シリアル番号',
+                'cqZone': 'CQゾーン',
+                'qsoNumber': 'QSO番号',
+                'provinceAbbr': '都道府県略称',
+                'theirName': '相手の名前',
+                'theirLocation': '相手の場所',
+                'theirGrid': '相手のグリッドスクエア',
+                'remarks': '備考',
+                'importLog': 'ログをインポート',
+                'saveRecord': '記録を保存',
+                'personalInfo': '個人情報',
+                'myCallsign': '私のコールサイン',
+                'myGrid': '私のGRIDスクエア',
+                'myCQZone': '私のCQゾーン',
+                'myITUZone': '私のITUゾーン',
+                'myEquipment': '使用機器',
+                'myAntenna': '使用アンテナ',
+                'displaySettings': '表示設定',
+                'themeMode': 'テーマモード',
+                'light': 'ライト',
+                'dark': 'ダーク',
+                'timeDisplay': '時間表示',
+                'about': 'について',
+                'developedBy': 'BG5DHV開発',
+                'exportRecords': '記録をエクスポート',
+                'contestFilter': 'コンテストフィルター',
+                'allRecords': 'すべての記録',
+                'exportFilename': 'エクスポートファイル名',
+                'exportFormat': 'エクスポート形式',
+                'generateExport': 'エクスポートを生成',
+                'exportContent': 'エクスポート内容',
+                'downloadFile': 'ファイルをダウンロード',
+                'confirmAction': '操作を確認',
+                'cancel': 'キャンセル',
+                'confirm': '確認'
+            }
+        };
+
+        // DOM 加载完成后初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的数据
+            loadData();
+            
+            // 初始化UI
+            initUI();
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 更新时间显示
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+
+        // 加载本地存储的数据
+        function loadData() {
+            const savedRecords = localStorage.getItem('hamRadioRecords');
+            const savedSettings = localStorage.getItem('hamRadioSettings');
+            
+            if (savedRecords) {
+                AppState.records = JSON.parse(savedRecords);
+            }
+            
+            if (savedSettings) {
+                AppState.settings = {...AppState.settings, ...JSON.parse(savedSettings)};
+            }
+        }
+
+        // 保存数据到本地存储
+        function saveData() {
+            localStorage.setItem('hamRadioRecords', JSON.stringify(AppState.records));
+            localStorage.setItem('hamRadioSettings', JSON.stringify(AppState.settings));
+        }
+
+        // 初始化UI
+        function initUI() {
+            // 更新顶部栏呼号显示
+            document.getElementById('userCallsign').textContent = 
+                AppState.settings.myCallsign || getTranslation('noCallsign');
+            
+            // 应用主题设置
+            document.documentElement.setAttribute('data-theme', AppState.settings.theme);
+            
+            // 更新设置表单
+            document.getElementById('myCallsign').value = AppState.settings.myCallsign;
+            document.getElementById('myGrid').value = AppState.settings.myGrid;
+            document.getElementById('myCQZone').value = AppState.settings.myCQZone;
+            document.getElementById('myITUZone').value = AppState.settings.myITUZone;
+            document.getElementById('myEquipment').value = AppState.settings.myEquipment;
+            document.getElementById('myAntenna').value = AppState.settings.myAntenna;
+            
+            // 设置主题选项
+            document.querySelectorAll('.theme-option[data-theme]').forEach(option => {
+                option.classList.toggle('active', option.dataset.theme === AppState.settings.theme);
+            });
+            
+            // 设置时区选项
+            document.querySelectorAll('.theme-option[data-timezone]').forEach(option => {
+                option.classList.toggle('active', option.dataset.timezone === AppState.settings.timezone);
+            });
+            
+            // 设置语言选项
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.lang === AppState.settings.language);
+            });
+            
+            // 渲染记录列表
+            renderRecords();
+            
+            // 应用多语言
+            applyTranslations();
+        }
+
+        // 获取翻译文本
+        function getTranslation(key, params = {}) {
+            const lang = AppState.settings.language || 'zh-CN';
+            let text = Translations[lang][key] || Translations['zh-CN'][key] || key;
+            
+            // 替换参数
+            Object.keys(params).forEach(param => {
+                text = text.replace(`{${param}}`, params[param]);
+            });
+            
+            return text;
+        }
+
+        // 应用多语言翻译
+        function applyTranslations() {
+            // 更新所有带有data-translate属性的元素
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                element.textContent = getTranslation(key);
+            });
+            
+            // 更新空状态
+            const emptyState = document.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.querySelector('.empty-text').textContent = getTranslation('noRecords');
+                emptyState.querySelector('.empty-subtext').textContent = getTranslation('addRecordHint');
+            }
+            
+            // 更新顶部栏呼号
+            document.getElementById('userCallsign').textContent = 
+                AppState.settings.myCallsign || getTranslation('noCallsign');
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 底部导航切换
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const pageId = this.dataset.page;
+                    switchPage(pageId);
+                    
+                    // 更新活动标签
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 筛选区域切换
+            document.getElementById('filterToggle').addEventListener('click', function() {
+                const content = document.getElementById('filterContent');
+                content.classList.toggle('expanded');
+                this.querySelector('div').textContent = content.classList.contains('expanded') ? '▲' : '▼';
+            });
+            
+            // 保存记录按钮
+            document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
+            
+            // 设置表单保存
+            document.getElementById('myCallsign').addEventListener('change', saveSettings);
+            document.getElementById('myGrid').addEventListener('change', saveSettings);
+            document.getElementById('myCQZone').addEventListener('change', saveSettings);
+            document.getElementById('myITUZone').addEventListener('change', saveSettings);
+            document.getElementById('myEquipment').addEventListener('change', saveSettings);
+            document.getElementById('myAntenna').addEventListener('change', saveSettings);
+            
+            // 主题切换
+            document.querySelectorAll('.theme-option[data-theme]').forEach(option => {
+                option.addEventListener('click', function() {
+                    AppState.settings.theme = this.dataset.theme;
+                    saveSettings();
+                    document.documentElement.setAttribute('data-theme', AppState.settings.theme);
+                    
+                    // 更新活动选项
+                    document.querySelectorAll('.theme-option[data-theme]').forEach(opt => {
+                        opt.classList.toggle('active', opt.dataset.theme === AppState.settings.theme);
+                    });
+                });
+            });
+            
+            // 时区切换
+            document.querySelectorAll('.theme-option[data-timezone]').forEach(option => {
+                option.addEventListener('click', function() {
+                    AppState.settings.timezone = this.dataset.timezone;
+                    saveSettings();
+                    
+                    // 更新活动选项
+                    document.querySelectorAll('.theme-option[data-timezone]').forEach(opt => {
+                        opt.classList.toggle('active', opt.dataset.timezone === AppState.settings.timezone);
+                    });
+                    
+                    updateTime();
+                });
+            });
+            
+            // 语言切换
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    AppState.settings.language = this.dataset.lang;
+                    saveSettings();
+                    
+                    // 更新活动选项
+                    document.querySelectorAll('.language-option').forEach(opt => {
+                        opt.classList.toggle('active', opt.dataset.lang === AppState.settings.language);
+                    });
+                    
+                    applyTranslations();
+                    renderRecords();
+                });
+            });
+            
+            // 导入文件
+            document.getElementById('importFile').addEventListener('change', handleFileImport);
+            
+            // 应用筛选按钮
+            document.getElementById('applyFilterBtn').addEventListener('click', applyFilters);
+            
+            // 清除筛选按钮
+            document.getElementById('clearFilterBtn').addEventListener('click', clearFilters);
+            
+            // 导出格式选择
+            document.querySelectorAll('.theme-option[data-format]').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.theme-option[data-format]').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+            
+            // 生成导出文件
+            document.getElementById('generateExportBtn').addEventListener('click', generateExport);
+            
+            // 下载文件
+            document.getElementById('downloadBtn').addEventListener('click', downloadExport);
+            
+            // 模态框事件
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modalCancel').addEventListener('click', closeModal);
+            document.getElementById('modalConfirm').addEventListener('click', function() {
+                if (AppState.modalCallback) {
+                    AppState.modalCallback();
+                }
+                closeModal();
+            });
+            
+            // 自定义选择器事件
+            setupCustomSelectors();
+            
+            // 比赛选择变化事件
+            document.getElementById('contestSelect').addEventListener('change', function() {
+                updateContestFields();
+            });
+        }
+
+        // 设置自定义选择器
+        function setupCustomSelectors() {
+            // 为所有自定义选择器添加事件
+            document.querySelectorAll('.custom-select').forEach(select => {
+                const header = select.querySelector('.custom-select-header');
+                const options = select.querySelector('.custom-select-options');
+                const valueSpan = select.querySelector('span:first-child');
+                
+                // 点击标题展开/收起选项
+                header.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isActive = options.classList.contains('active');
+                    
+                    // 关闭所有其他选择器
+                    document.querySelectorAll('.custom-select-options').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    
+                    // 切换当前选择器
+                    if (!isActive) {
+                        options.classList.add('active');
+                    }
+                });
+                
+                // 点击选项
+                options.querySelectorAll('.custom-select-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        const value = this.getAttribute('data-value');
+                        const text = this.textContent;
+                        
+                        valueSpan.textContent = text;
+                        valueSpan.setAttribute('data-value', value);
+                        
+                        // 触发change事件
+                        select.dispatchEvent(new Event('change'));
+                        
+                        // 关闭选项列表
+                        options.classList.remove('active');
+                    });
+                });
+            });
+            
+            // 点击页面其他区域关闭所有选择器
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.custom-select-options').forEach(options => {
+                    options.classList.remove('active');
+                });
+            });
+        }
+
+        // 更新比赛特定字段显示
+        function updateContestFields() {
+            const contestSelect = document.getElementById('contestSelect');
+            const contestValue = contestSelect.querySelector('span:first-child').getAttribute('data-value');
+            const contestFields = document.getElementById('contestFields');
+            
+            // 隐藏所有比赛特定字段
+            document.getElementById('serialField').style.display = 'none';
+            document.getElementById('cqzoneField').style.display = 'none';
+            document.getElementById('qsosNumberField').style.display = 'none';
+            document.getElementById('provinceField').style.display = 'none';
+            
+            // 根据选择的比赛显示特定字段
+            if (contestValue === 'CQWPX') {
+                contestFields.style.display = 'block';
+                document.getElementById('serialField').style.display = 'block';
+            } else if (contestValue === 'CQWW') {
+                contestFields.style.display = 'block';
+                document.getElementById('cqzoneField').style.display = 'block';
+            } else if (contestValue === 'WAPC') {
+                contestFields.style.display = 'block';
+                document.getElementById('qsosNumberField').style.display = 'block';
+                document.getElementById('provinceField').style.display = 'block';
+            } else {
+                contestFields.style.display = 'none';
+            }
+        }
+
+        // 切换页面
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            
+            // 如果是记录页面，刷新记录列表
+            if (pageId === 'recordsPage') {
+                renderRecords();
+            }
+            
+            // 如果是新增页面，清空表单
+            if (pageId === 'addPage') {
+                clearForm();
+            }
+        }
+
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            let timeString;
+            
+            if (AppState.settings.timezone === 'UTC') {
+                const utcHours = now.getUTCHours().toString().padStart(2, '0');
+                const utcMinutes = now.getUTCMinutes().toString().padStart(2, '0');
+                const utcSeconds = now.getUTCSeconds().toString().padStart(2, '0');
+                timeString = `${utcHours}:${utcMinutes}:${utcSeconds} UTC`;
+            } else {
+                const bjtHours = now.getHours().toString().padStart(2, '0');
+                const bjtMinutes = now.getMinutes().toString().padStart(2, '0');
+                const bjtSeconds = now.getSeconds().toString().padStart(2, '0');
+                timeString = `${bjtHours}:${bjtMinutes}:${bjtSeconds} BJT`;
+            }
+            
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 渲染记录列表
+        function renderRecords() {
+            const container = document.getElementById('recordsContainer');
+            
+            // 应用筛选
+            let filteredRecords = [...AppState.records];
+            
+            if (AppState.filters.dateFrom) {
+                filteredRecords = filteredRecords.filter(record => {
+                    const recordDate = new Date(record.date);
+                    return recordDate >= new Date(AppState.filters.dateFrom);
+                });
+            }
+            
+            if (AppState.filters.dateTo) {
+                filteredRecords = filteredRecords.filter(record => {
+                    const recordDate = new Date(record.date);
+                    const filterDate = new Date(AppState.filters.dateTo);
+                    filterDate.setDate(filterDate.getDate() + 1); // 包含结束日期当天
+                    return recordDate < filterDate;
+                });
+            }
+            
+            if (AppState.filters.callsign) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.callsign.toLowerCase().includes(AppState.filters.callsign.toLowerCase())
+                );
+            }
+            
+            if (AppState.filters.grid) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.gridsquare && record.gridsquare.toLowerCase().includes(AppState.filters.grid.toLowerCase())
+                );
+            }
+            
+            if (AppState.filters.contest) {
+                filteredRecords = filteredRecords.filter(record => 
+                    record.contest === AppState.filters.contest
+                );
+            }
+            
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📡</div>
+                        <div class="empty-text">${getTranslation('noRecords')}</div>
+                        <div class="empty-subtext">${getTranslation('addRecordHint')}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // 按日期排序（最新的在前面）
+            filteredRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            filteredRecords.forEach((record, index) => {
+                // 找到记录在原始数组中的索引
+                const originalIndex = AppState.records.findIndex(r => r.id === record.id);
+                
+                const card = document.createElement('div');
+                card.className = 'record-card collapsed';
+                card.dataset.index = originalIndex;
+                
+                // 格式化日期时间
+                const dateObj = new Date(record.date);
+                const dateStr = dateObj.toLocaleDateString('zh-CN');
+                const timeStr = dateObj.toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                // 构建频率显示内容
+                let frequencyDisplay = `${record.frequency} MHz • ${record.mode}`;
+                if (record.contest) {
+                    frequencyDisplay = `${record.frequency} MHz • ${record.mode} <span class="contest-badge">${record.contest}</span>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="record-summary">
+                        <div class="record-callsign">${record.callsign}</div>
+                        <div class="record-datetime">${dateStr} ${timeStr}</div>
+                        <div class="record-frequency">${frequencyDisplay}</div>
+                    </div>
+                    <div class="record-details" style="display: none;">
+                        ${record.contest ? `<div class="detail-row">
+                            <span class="detail-label">${getTranslation('contest')}:</span>
+                            <span class="detail-value">${record.contest}</span>
+                        </div>` : ''}
+                        ${record.serial ? `<div class="detail-row">
+                            <span class="detail-label">${getTranslation('serialNumber')}:</span>
+                            <span class="detail-value">${record.serial}</span>
+                        </div>` : ''}
+                        ${record.cqzone ? `<div class="detail-row">
+                            <span class="detail-label">${getTranslation('cqZone')}:</span>
+                            <span class="detail-value">${record.cqzone}</span>
+                        </div>` : ''}
+                        ${record.qsosNumber ? `<div class="detail-row">
+                            <span class="detail-label">${getTranslation('qsoNumber')}:</span>
+                            <span class="detail-value">${record.qsosNumber}</span>
+                        </div>` : ''}
+                        ${record.province ? `<div class="detail-row">
+                            <span class="detail-label">${getTranslation('provinceAbbr')}:</span>
+                            <span class="detail-value">${record.province}</span>
+                        </div>` : ''}
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('theirCallsign')}:</span>
+                            <span class="detail-value">${record.callsign}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('frequency')}:</span>
+                            <span class="detail-value">${record.frequency} MHz</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('mode')}:</span>
+                            <span class="detail-value">${record.mode}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('date')}/${getTranslation('time')}:</span>
+                            <span class="detail-value">${dateStr} ${timeStr}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('sentReport')}:</span>
+                            <span class="detail-value">${record.rstSent}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('receivedReport')}:</span>
+                            <span class="detail-value">${record.rstRcvd}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('theirName')}:</span>
+                            <span class="detail-value">${record.name || '-'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('theirLocation')}:</span>
+                            <span class="detail-value">${record.qth || '-'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('theirGrid')}:</span>
+                            <span class="detail-value">${record.gridsquare || '-'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">${getTranslation('remarks')}:</span>
+                            <span class="detail-value">${record.comment || '-'}</span>
+                        </div>
+                        <div class="record-actions">
+                            <button class="btn btn-primary edit-record">✏️ ${getTranslation('edit')}</button>
+                            <button class="btn btn-danger delete-record">🗑️ ${getTranslation('delete')}</button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+                
+                // 添加卡片点击事件
+                card.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('edit-record') && 
+                        !e.target.classList.contains('delete-record')) {
+                        toggleRecordCard(this);
+                    }
+                });
+                
+                // 添加编辑按钮事件
+                card.querySelector('.edit-record').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    editRecord(originalIndex);
+                });
+                
+                // 添加删除按钮事件
+                card.querySelector('.delete-record').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    showConfirmation(getTranslation('deleteConfirm'), () => {
+                        deleteRecord(originalIndex);
+                    });
+                });
+            });
+        }
+
+        // 切换记录卡片展开/收起状态
+        function toggleRecordCard(card) {
+            const isExpanded = card.classList.contains('expanded');
+            const details = card.querySelector('.record-details');
+            
+            if (isExpanded) {
+                card.classList.remove('expanded');
+                card.classList.add('collapsed');
+                details.style.display = 'none';
+            } else {
+                card.classList.remove('collapsed');
+                card.classList.add('expanded');
+                details.style.display = 'flex';
+            }
+        }
+
+        // 保存记录
+        function saveRecord() {
+            const callsign = document.getElementById('callsign').value;
+            const frequency = document.getElementById('frequency').value;
+            const mode = document.getElementById('modeSelect').querySelector('span:first-child').getAttribute('data-value');
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const rstSent = document.getElementById('rstSent').value;
+            const rstRcvd = document.getElementById('rstRcvd').value;
+            const name = document.getElementById('name').value;
+            const qth = document.getElementById('qth').value;
+            const gridsquare = document.getElementById('gridsquare').value;
+            const comment = document.getElementById('comment').value;
+            const contest = document.getElementById('contestSelect').querySelector('span:first-child').getAttribute('data-value');
+            
+            // 获取比赛特定字段
+            const serial = document.getElementById('serial').value;
+            const cqzone = document.getElementById('cqzone').value;
+            const qsosNumber = document.getElementById('qsosNumber').value;
+            const province = document.getElementById('province').value;
+            
+            if (!callsign) {
+                showMessage('请输入对方呼号');
+                return;
+            }
+            
+            // 创建日期时间对象
+            let dateTime;
+            if (date && time) {
+                dateTime = new Date(`${date}T${time}`);
+            } else {
+                dateTime = new Date();
+            }
+            
+            const record = {
+                id: Date.now().toString(),
+                callsign,
+                frequency,
+                mode,
+                date: dateTime.toISOString(),
+                rstSent,
+                rstRcvd,
+                name,
+                qth,
+                gridsquare,
+                comment,
+                contest
+            };
+            
+            // 添加比赛特定字段
+            if (contest === 'CQWPX') {
+                record.serial = serial;
+            } else if (contest === 'CQWW') {
+                record.cqzone = cqzone;
+            } else if (contest === 'WAPC') {
+                record.qsosNumber = qsosNumber;
+                record.province = province;
+            }
+            
+            // 检查重复记录
+            const isDuplicate = checkDuplicateRecord(record);
+            
+            if (isDuplicate && AppState.currentEditingRecord === null) {
+                showConfirmation(getTranslation('duplicateFound'), () => {
+                    saveRecordToDB(record);
+                });
+            } else {
+                if (AppState.currentEditingRecord !== null) {
+                    showConfirmation(getTranslation('updateConfirm'), () => {
+                        saveRecordToDB(record);
+                    });
+                } else {
+                    saveRecordToDB(record);
+                }
+            }
+        }
+
+        // 检查重复记录
+        function checkDuplicateRecord(record) {
+            return AppState.records.some(existingRecord => 
+                existingRecord.callsign === record.callsign &&
+                existingRecord.frequency === record.frequency &&
+                existingRecord.mode === record.mode &&
+                Math.abs(new Date(existingRecord.date) - new Date(record.date)) < 60000 // 1分钟内
+            );
+        }
+
+        // 保存记录到数据库
+        function saveRecordToDB(record) {
+            if (AppState.currentEditingRecord !== null) {
+                // 更新现有记录
+                AppState.records[AppState.currentEditingRecord] = record;
+                AppState.currentEditingRecord = null;
+            } else {
+                // 添加新记录
+                AppState.records.push(record);
+            }
+            
+            saveData();
+            clearForm();
+            switchPage('recordsPage');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector('.nav-tab[data-page="recordsPage"]').classList.add('active');
+        }
+
+        // 编辑记录
+        function editRecord(index) {
+            const record = AppState.records[index];
+            AppState.currentEditingRecord = index;
+            
+            // 填充表单
+            document.getElementById('callsign').value = record.callsign;
+            document.getElementById('frequency').value = record.frequency;
+            
+            // 设置模式选择
+            const modeSelect = document.getElementById('modeSelect');
+            const modeValue = modeSelect.querySelector('span:first-child');
+            modeValue.textContent = record.mode;
+            modeValue.setAttribute('data-value', record.mode);
+            
+            // 设置比赛选择
+            const contestSelect = document.getElementById('contestSelect');
+            const contestValue = contestSelect.querySelector('span:first-child');
+            contestValue.textContent = record.contest || getTranslation('noContest');
+            contestValue.setAttribute('data-value', record.contest || '');
+            
+            const dateObj = new Date(record.date);
+            document.getElementById('date').value = dateObj.toISOString().split('T')[0];
+            document.getElementById('time').value = 
+                `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+            
+            document.getElementById('rstSent').value = record.rstSent;
+            document.getElementById('rstRcvd').value = record.rstRcvd;
+            document.getElementById('name').value = record.name || '';
+            document.getElementById('qth').value = record.qth || '';
+            document.getElementById('gridsquare').value = record.gridsquare || '';
+            document.getElementById('comment').value = record.comment || '';
+            
+            // 填充比赛特定字段
+            document.getElementById('serial').value = record.serial || '';
+            document.getElementById('cqzone').value = record.cqzone || '';
+            document.getElementById('qsosNumber').value = record.qsosNumber || '';
+            document.getElementById('province').value = record.province || '';
+            
+            // 更新比赛特定字段显示
+            updateContestFields();
+            
+            // 切换到新增页面
+            switchPage('addPage');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector('.nav-tab[data-page="addPage"]').classList.add('active');
+            
+            // 更新按钮文本
+            document.getElementById('saveRecordBtn').textContent = getTranslation('updateRecord');
+        }
+
+        // 删除记录
+        function deleteRecord(index) {
+            AppState.records.splice(index, 1);
+            saveData();
+            renderRecords();
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('callsign').value = '';
+            document.getElementById('frequency').value = '';
+            
+            // 重置模式选择
+            const modeSelect = document.getElementById('modeSelect');
+            const modeValue = modeSelect.querySelector('span:first-child');
+            modeValue.textContent = 'SSB';
+            modeValue.setAttribute('data-value', 'SSB');
+            
+            // 重置比赛选择
+            const contestSelect = document.getElementById('contestSelect');
+            const contestValue = contestSelect.querySelector('span:first-child');
+            contestValue.textContent = getTranslation('noContest');
+            contestValue.setAttribute('data-value', '');
+            
+            document.getElementById('date').value = '';
+            document.getElementById('time').value = '';
+            document.getElementById('rstSent').value = '';
+            document.getElementById('rstRcvd').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('qth').value = '';
+            document.getElementById('gridsquare').value = '';
+            document.getElementById('comment').value = '';
+            
+            // 清空比赛特定字段
+            document.getElementById('serial').value = '';
+            document.getElementById('cqzone').value = '';
+            document.getElementById('qsosNumber').value = '';
+            document.getElementById('province').value = '';
+            
+            // 隐藏比赛特定字段
+            document.getElementById('contestFields').style.display = 'none';
+            
+            document.getElementById('saveRecordBtn').textContent = getTranslation('saveRecord');
+            AppState.currentEditingRecord = null;
+        }
+
+        // 保存设置
+        function saveSettings() {
+            AppState.settings.myCallsign = document.getElementById('myCallsign').value;
+            AppState.settings.myGrid = document.getElementById('myGrid').value;
+            AppState.settings.myCQZone = document.getElementById('myCQZone').value;
+            AppState.settings.myITUZone = document.getElementById('myITUZone').value;
+            AppState.settings.myEquipment = document.getElementById('myEquipment').value;
+            AppState.settings.myAntenna = document.getElementById('myAntenna').value;
+            
+            saveData();
+            
+            // 更新顶部栏呼号显示
+            document.getElementById('userCallsign').textContent = 
+                AppState.settings.myCallsign || getTranslation('noCallsign');
+        }
+
+        // 应用筛选
+        function applyFilters() {
+            AppState.filters.dateFrom = document.getElementById('filterDateFrom').value;
+            AppState.filters.dateTo = document.getElementById('filterDateTo').value;
+            AppState.filters.callsign = document.getElementById('filterCallsign').value;
+            AppState.filters.grid = document.getElementById('filterGrid').value;
+            AppState.filters.contest = document.getElementById('filterContestSelect').querySelector('span:first-child').getAttribute('data-value');
+            
+            renderRecords();
+        }
+
+        // 清除筛选
+        function clearFilters() {
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('filterCallsign').value = '';
+            document.getElementById('filterGrid').value = '';
+            
+            const filterContestSelect = document.getElementById('filterContestSelect');
+            const filterContestValue = filterContestSelect.querySelector('span:first-child');
+            filterContestValue.textContent = getTranslation('all');
+            filterContestValue.setAttribute('data-value', '');
+            
+            AppState.filters.dateFrom = null;
+            AppState.filters.dateTo = null;
+            AppState.filters.callsign = '';
+            AppState.filters.grid = '';
+            AppState.filters.contest = '';
+            
+            renderRecords();
+        }
+
+        // 处理文件导入
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                let importedRecords = [];
+                
+                // 尝试解析ADI格式
+                if (file.name.toLowerCase().endsWith('.adi')) {
+                    importedRecords = parseADIFile(content);
+                } 
+                // 尝试解析Cabrillo格式
+                else if (file.name.toLowerCase().endsWith('.log') || 
+                         file.name.toLowerCase().endsWith('.cabrillo') ||
+                         file.name.toLowerCase().endsWith('.txt')) {
+                    importedRecords = parseCabrilloFile(content);
+                }
+                
+                if (importedRecords.length > 0) {
+                    // 为每条记录添加唯一ID
+                    importedRecords.forEach(record => {
+                        record.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                    });
+                    
+                    // 检查重复记录
+                    let duplicates = 0;
+                    const uniqueRecords = importedRecords.filter(record => {
+                        const isDuplicate = checkDuplicateRecord(record);
+                        if (isDuplicate) duplicates++;
+                        return !isDuplicate;
+                    });
+                    
+                    // 合并记录
+                    AppState.records = [...AppState.records, ...uniqueRecords];
+                    saveData();
+                    renderRecords();
+                    
+                    if (duplicates > 0) {
+                        showMessage(getTranslation('importPartial', {count: uniqueRecords.length, skipped: duplicates}));
+                    } else {
+                        showMessage(getTranslation('importSuccess', {count: importedRecords.length}));
+                    }
+                } else {
+                    showMessage(getTranslation('importFailed'));
+                }
+                
+                // 重置文件输入
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // 解析ADI文件
+        function parseADIFile(content) {
+            const records = [];
+            const lines = content.split('\n');
+            let currentRecord = {};
+            
+            for (const line of lines) {
+                if (line.trim() === '') continue;
+                
+                // 匹配ADIF字段: <FIELD_NAME:length>data
+                const fieldMatch = line.match(/<([^:>]+):(\d+)>([^<]*)/);
+                if (fieldMatch) {
+                    const [, field, length, data] = fieldMatch;
+                    currentRecord[field.toLowerCase()] = data.trim();
+                }
+                
+                // 遇到EOR标记，保存记录
+                if (line.includes('<EOR>')) {
+                    if (currentRecord.call) {
+                        records.push({
+                            callsign: currentRecord.call,
+                            frequency: currentRecord.freq || '',
+                            mode: currentRecord.mode || '',
+                            date: parseADIDate(currentRecord.qso_date, currentRecord.time_on),
+                            rstSent: currentRecord.rst_sent || '',
+                            rstRcvd: currentRecord.rst_rcvd || '',
+                            name: currentRecord.name || '',
+                            qth: currentRecord.qth || '',
+                            gridsquare: currentRecord.gridsquare || '',
+                            comment: currentRecord.comment || '',
+                            contest: currentRecord.contest || '',
+                            serial: currentRecord.serial || '',
+                            cqzone: currentRecord.cqzone || '',
+                            qsosNumber: currentRecord.qsos_number || '',
+                            province: currentRecord.province || ''
+                        });
+                    }
+                    currentRecord = {};
+                }
+            }
+            
+            return records;
+        }
+
+        // 解析ADI日期时间
+        function parseADIDate(dateStr, timeStr) {
+            if (!dateStr || !timeStr) return new Date().toISOString();
+            
+            // ADI格式: YYYYMMDD 和 HHMMSS
+            const year = dateStr.substring(0, 4);
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            
+            const hour = timeStr.substring(0, 2);
+            const minute = timeStr.substring(2, 4);
+            const second = timeStr.substring(4, 6) || '00';
+            
+            return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`).toISOString();
+        }
+
+        // 解析Cabrillo文件
+        function parseCabrilloFile(content) {
+            const records = [];
+            const lines = content.split('\n');
+            let contest = '';
+            
+            // 从文件头获取比赛信息
+            for (const line of lines) {
+                if (line.startsWith('CONTEST:')) {
+                    contest = line.substring(8).trim();
+                    break;
+                }
+            }
+            
+            for (const line of lines) {
+                if (line.startsWith('QSO:')) {
+                    const parts = line.split(/\s+/);
+                    // Cabrillo格式因比赛而异，这里实现一个通用解析
+                    if (parts.length >= 8) {
+                        // 假设格式: QSO: freq mode date time sentCall sentRst sentExchange rcvdCall rcvdRst rcvdExchange
+                        const freq = parts[1];
+                        const mode = parts[2];
+                        const date = parts[3];
+                        const time = parts[4];
+                        const sentCall = parts[5];
+                        const sentRst = parts[6];
+                        const rcvdCall = parts[7];
+                        const rcvdRst = parts[8];
+                        
+                        records.push({
+                            callsign: rcvdCall,
+                            frequency: freq,
+                            mode: mode,
+                            date: parseCabrilloDate(date, time),
+                            rstSent: sentRst,
+                            rstRcvd: rcvdRst,
+                            name: '',
+                            qth: '',
+                            gridsquare: '',
+                            comment: '从Cabrillo文件导入',
+                            contest: contest
+                        });
+                    }
+                }
+            }
+            
+            return records;
+        }
+
+        // 解析Cabrillo日期时间
+        function parseCabrilloDate(dateStr, timeStr) {
+            // Cabrillo格式: YYYY-MM-DD 和 HHMM
+            return new Date(`${dateStr}T${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:00`).toISOString();
+        }
+
+        // 生成导出内容
+        function generateExport() {
+            const format = document.querySelector('.theme-option[data-format].active').dataset.format;
+            const dateFrom = document.getElementById('exportDateFrom').value;
+            const dateTo = document.getElementById('exportDateTo').value;
+            const contest = document.getElementById('exportContestSelect').querySelector('span:first-child').getAttribute('data-value');
+            let exportContent = '';
+            
+            // 筛选要导出的记录
+            let recordsToExport = [...AppState.records];
+            
+            if (dateFrom) {
+                recordsToExport = recordsToExport.filter(record => {
+                    const recordDate = new Date(record.date);
+                    return recordDate >= new Date(dateFrom);
+                });
+            }
+            
+            if (dateTo) {
+                recordsToExport = recordsToExport.filter(record => {
+                    const recordDate = new Date(record.date);
+                    const filterDate = new Date(dateTo);
+                    filterDate.setDate(filterDate.getDate() + 1); // 包含结束日期当天
+                    return recordDate < filterDate;
+                });
+            }
+            
+            // 如果选择了比赛，只导出该比赛的记录
+            if (contest) {
+                recordsToExport = recordsToExport.filter(record => record.contest === contest);
+            }
+            
+            if (format === 'adi') {
+                exportContent = generateADIContent(recordsToExport);
+            } else {
+                exportContent = generateCabrilloContent(recordsToExport, contest);
+            }
+            
+            document.getElementById('exportContent').value = exportContent;
+            document.getElementById('exportResult').style.display = 'block';
+        }
+
+        // 生成ADI格式内容
+        function generateADIContent(records) {
+            let content = 'ELVES Log Export\n';
+            content += '<ADIF_VER:5>3.1.0\n';
+            content += '<CREATED_TIMESTAMP:15>' + new Date().toISOString().replace(/[-:]/g, '').substring(0, 15) + '\n';
+            content += '<PROGRAMID:5>ELVES\n';
+            content += '<PROGRAMVERSION:13>1.10.20251013\n';
+            content += '<EOH>\n';
+            
+            records.forEach(record => {
+                const date = new Date(record.date);
+                const dateStr = date.toISOString().substring(0, 10).replace(/-/g, '');
+                const timeStr = date.toISOString().substring(11, 19).replace(/:/g, '');
+                
+                content += `<CALL:${record.callsign.length}>${record.callsign}\n`;
+                content += `<BAND:${getBandFromFreq(record.frequency).length}>${getBandFromFreq(record.frequency)}\n`;
+                content += `<FREQ:${record.frequency.length}>${record.frequency}\n`;
+                content += `<MODE:${record.mode.length}>${record.mode}\n`;
+                content += `<QSO_DATE:8>${dateStr}\n`;
+                content += `<TIME_ON:6>${timeStr}\n`;
+                content += `<RST_SENT:${record.rstSent.length}>${record.rstSent}\n`;
+                content += `<RST_RCVD:${record.rstRcvd.length}>${record.rstRcvd}\n`;
+                
+                if (record.name) {
+                    content += `<NAME:${record.name.length}>${record.name}\n`;
+                }
+                
+                if (record.qth) {
+                    content += `<QTH:${record.qth.length}>${record.qth}\n`;
+                }
+                
+                if (record.gridsquare) {
+                    content += `<GRIDSQUARE:${record.gridsquare.length}>${record.gridsquare}\n`;
+                }
+                
+                if (record.comment) {
+                    content += `<COMMENT:${record.comment.length}>${record.comment}\n`;
+                }
+                
+                if (record.contest) {
+                    content += `<CONTEST_ID:${record.contest.length}>${record.contest}\n`;
+                }
+                
+                if (record.serial) {
+                    content += `<SERIAL:${record.serial.length}>${record.serial}\n`;
+                }
+                
+                if (record.cqzone) {
+                    content += `<CQZ:${record.cqzone.length}>${record.cqzone}\n`;
+                }
+                
+                if (record.qsosNumber) {
+                    content += `<QSO_NUMBER:${record.qsosNumber.length}>${record.qsosNumber}\n`;
+                }
+                
+                if (record.province) {
+                    content += `<STATE:${record.province.length}>${record.province}\n`;
+                }
+                
+                content += '<EOR>\n';
+            });
+            
+            return content;
+        }
+
+        // 生成Cabrillo格式内容
+        function generateCabrilloContent(records, contest) {
+            let content = 'START-OF-LOG: 3.0\n';
+            content += `CREATED-BY: ELVES 1.10.20251013\n`;
+            content += `CALLSIGN: ${AppState.settings.myCallsign || 'N0CALL'}\n`;
+            content += `CONTEST: ${contest || 'GENERAL'}\n`;
+            content += `CATEGORY-OPERATOR: SINGLE-OP\n`;
+            content += `CATEGORY-ASSISTED: NON-ASSISTED\n`;
+            content += `CATEGORY-BAND: ALL\n`;
+            content += `CATEGORY-POWER: HIGH\n`;
+            content += `CATEGORY-MODE: MIXED\n`;
+            content += `CATEGORY-TRANSMITTER: ONE\n`;
+            content += `CLAIMED-SCORE: 0\n`;
+            content += `OPERATORS: ${AppState.settings.myCallsign || 'N0CALL'}\n`;
+            content += `NAME: ${AppState.settings.myCallsign || 'Operator'}\n`;
+            content += `ADDRESS: \n`;
+            content += `ADDRESS: \n`;
+            content += `ADDRESS: \n`;
+            content += `EMAIL: \n`;
+            
+            records.forEach(record => {
+                const date = new Date(record.date);
+                const dateStr = date.toISOString().substring(0, 10);
+                const timeStr = date.toISOString().substring(11, 16).replace(':', '');
+                
+                // 根据比赛类型构建交换信息
+                let sentExchange = '';
+                let rcvdExchange = '';
+                
+                if (contest === 'CQWPX') {
+                    sentExchange = record.serial || '001';
+                    rcvdExchange = record.serial || '001';
+                } else if (contest === 'CQWW') {
+                    sentExchange = AppState.settings.myCQZone || '24';
+                    rcvdExchange = record.cqzone || '24';
+                } else if (contest === 'WAPC') {
+                    sentExchange = `${AppState.settings.myCQZone || '24'} ${AppState.settings.myITUZone || '44'}`;
+                    rcvdExchange = `${record.cqzone || '24'} ${record.province || 'ZJ'}`;
+                } else {
+                    sentExchange = record.rstSent;
+                    rcvdExchange = record.rstRcvd;
+                }
+                
+                content += `QSO: ${record.frequency} ${record.mode} ${dateStr} ${timeStr} ${AppState.settings.myCallsign || 'N0CALL'} ${record.rstSent} ${sentExchange} ${record.callsign} ${record.rstRcvd} ${rcvdExchange}\n`;
+            });
+            
+            content += 'END-OF-LOG:\n';
+            
+            return content;
+        }
+
+        // 根据频率获取波段
+        function getBandFromFreq(freq) {
+            const frequency = parseFloat(freq);
+            if (frequency >= 1.8 && frequency <= 2.0) return '160m';
+            if (frequency >= 3.5 && frequency <= 4.0) return '80m';
+            if (frequency >= 7.0 && frequency <= 7.3) return '40m';
+            if (frequency >= 10.1 && frequency <= 10.15) return '30m';
+            if (frequency >= 14.0 && frequency <= 14.35) return '20m';
+            if (frequency >= 18.068 && frequency <= 18.168) return '17m';
+            if (frequency >= 21.0 && frequency <= 21.45) return '15m';
+            if (frequency >= 24.89 && frequency <= 24.99) return '12m';
+            if (frequency >= 28.0 && frequency <= 29.7) return '10m';
+            if (frequency >= 50.0 && frequency <= 54.0) return '6m';
+            if (frequency >= 144.0 && frequency <= 148.0) return '2m';
+            if (frequency >= 430.0 && frequency <= 440.0) return '70cm';
+            return 'Unknown';
+        }
+
+        // 下载导出文件
+        function downloadExport() {
+            const content = document.getElementById('exportContent').value;
+            const format = document.querySelector('.theme-option[data-format].active').dataset.format;
+            const filename = document.getElementById('exportFilename').value || 'ham_radio_log';
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.${format === 'adi' ? 'adi' : 'log'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 显示确认对话框
+        function showConfirmation(message, callback) {
+            document.getElementById('modalMessage').textContent = message;
+            AppState.modalCallback = callback;
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+
+        // 显示消息
+        function showMessage(message) {
+            document.getElementById('modalMessage').textContent = message;
+            AppState.modalCallback = null;
+            document.getElementById('modalConfirm').style.display = 'none';
+            document.getElementById('confirmationModal').classList.add('active');
+            
+            // 3秒后自动关闭
+            setTimeout(() => {
+                closeModal();
+            }, 3000);
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('confirmationModal').classList.remove('active');
+            document.getElementById('modalConfirm').style.display = 'block';
+            AppState.modalCallback = null;
+        }
+    </script>
+</body>
+</html>
